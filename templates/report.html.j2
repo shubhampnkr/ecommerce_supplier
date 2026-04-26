@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Meesho Daily Report – {{ report.report_date }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --meesho-pink: #F43082;
+    --meesho-dark: #1A1A2E;
+    --meesho-purple: #7B2FBE;
+    --meesho-light: #FFF5F8;
+    --green: #22C55E;
+    --red: #EF4444;
+    --amber: #F59E0B;
+    --blue: #3B82F6;
+    --text: #1F2937;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --card-bg: #FFFFFF;
+    --bg: #F8FAFC;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, var(--meesho-pink) 0%, var(--meesho-purple) 100%);
+    color: #fff;
+    padding: 40px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 280px;
+    height: 280px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 13px; opacity: 0.8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .report-title { font-size: 28px; font-weight: 700; }
+  .report-meta { font-size: 13px; opacity: 0.75; margin-top: 6px; }
+  .supplier-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: right;
+    backdrop-filter: blur(8px);
+  }
+  .supplier-badge .label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+  .supplier-badge .name { font-size: 18px; font-weight: 600; margin-top: 2px; }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--meesho-pink);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--meesho-pink);
+    display: inline-block;
+  }
+  .section { margin-bottom: 40px; }
+
+  /* ── Metric cards ── */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .metric-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .metric-card .label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+  .metric-card .value { font-size: 26px; font-weight: 700; color: var(--meesho-dark); }
+  .metric-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .metric-card.highlight { background: linear-gradient(135deg, var(--meesho-pink), var(--meesho-purple)); color: #fff; }
+  .metric-card.highlight .label, .metric-card.highlight .sub { color: rgba(255,255,255,0.75); }
+  .metric-card.highlight .value { color: #fff; }
+
+  /* ── Health badges ── */
+  .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .health-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .health-card .h-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .health-card .h-value { font-size: 22px; font-weight: 700; margin: 6px 0 4px; }
+  .good { color: var(--green); }
+  .warn { color: var(--amber); }
+  .bad  { color: var(--red); }
+
+  /* ── Product tables ── */
+  table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  th { background: var(--meesho-dark); color: #fff; padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--meesho-light); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: #DCFCE7; color: #166534; }
+  .badge-red   { background: #FEE2E2; color: #991B1B; }
+  .badge-amber { background: #FEF3C7; color: #92400E; }
+  .badge-blue  { background: #DBEAFE; color: #1E40AF; }
+
+  /* ── Insight cards ── */
+  .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .insight-grid { grid-template-columns: 1fr; } }
+  .insight-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--meesho-pink);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .insight-card.strategy { border-left-color: var(--meesho-purple); }
+  .insight-card.remove   { border-left-color: var(--red); }
+  .insight-card .i-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .insight-card .i-body  { font-size: 13px; color: var(--muted); }
+  .insight-card .i-meta  { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* ── Executive summary ── */
+  .exec-box {
+    background: linear-gradient(135deg, #FFF5F8, #F5F3FF);
+    border: 1px solid #FBCFE8;
+    border-radius: 16px;
+    padding: 28px 32px;
+  }
+  .exec-box p { margin-bottom: 12px; color: #374151; }
+  .exec-box p:last-child { margin-bottom: 0; }
+
+  /* ── Action items ── */
+  .action-list { list-style: none; }
+  .action-list li {
+    padding: 12px 16px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .action-list li::before {
+    content: '→';
+    color: var(--meesho-pink);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+  }
+  .footer strong { color: var(--meesho-pink); }
+
+  /* ── Highlights ── */
+  .highlights { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+  .highlight-pill {
+    background: #FFF5F8;
+    border: 1px solid #FBCFE8;
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--meesho-pink);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="brand">🛍️ Meesho Supplier Intelligence</div>
+      <div class="report-title">Daily Business Report</div>
+      <div class="report-meta">📅 {{ report.report_date }} &nbsp;·&nbsp; Generated {{ generated_at }}</div>
+    </div>
+    <div class="supplier-badge">
+      <div class="label">Supplier</div>
+      <div class="name">{{ report.supplier_name or "Your Store" }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── KEY HIGHLIGHTS ── -->
+  {% if report.key_highlights %}
+  <div class="highlights">
+    {% for h in report.key_highlights %}
+    <span class="highlight-pill">✦ {{ h }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── EXECUTIVE SUMMARY ── -->
+  <div class="section">
+    <div class="section-title">Executive Summary</div>
+    <div class="exec-box">
+      {% if report.executive_summary %}
+        {% for para in report.executive_summary.split('\n\n') %}
+        <p>{{ para }}</p>
+        {% endfor %}
+      {% else %}
+        <p>No executive summary available for this report period.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── ORDER METRICS ── -->
+  <div class="section">
+    <div class="section-title">Business Performance</div>
+    <div class="metric-grid">
+      <div class="metric-card highlight">
+        <div class="label">30-Day Revenue</div>
+        <div class="value">{{ report.order_metrics.revenue_30d | inr }}</div>
+        <div class="sub">7-day: {{ report.order_metrics.revenue_7d | inr }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Total Orders (30d)</div>
+        <div class="value">{{ report.order_metrics.total_orders_30d }}</div>
+        <div class="sub">7-day: {{ report.order_metrics.total_orders_7d }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Avg Order Value</div>
+        <div class="value">{{ report.order_metrics.avg_order_value | inr }}</div>
+        <div class="sub">Per transaction</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Pending Orders</div>
+        <div class="value">{{ report.order_metrics.pending_orders }}</div>
+        <div class="sub">Action required</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Cancelled</div>
+        <div class="value" style="color: var(--red)">{{ report.order_metrics.cancelled_orders }}</div>
+        <div class="sub">Returns: {{ report.order_metrics.return_orders }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT HEALTH ── -->
+  <div class="section">
+    <div class="section-title">Account Health</div>
+    <div class="health-grid">
+      <div class="health-card">
+        <div class="h-label">Supplier Rating</div>
+        <div class="h-value {% if report.account_health.supplier_rating >= 4 %}good{% elif report.account_health.supplier_rating >= 3 %}warn{% else %}bad{% endif %}">
+          {{ report.account_health.supplier_rating }}/5
+        </div>
+        <div style="font-size:18px;">{{ report.account_health.supplier_rating | stars }}</div>
+      </div>
+      <div class="health-card">
+        <div class="h-label">Cancellation Rate</div>
+        <div class="h-value {% if report.account_health.cancellation_rate_pct <= 2 %}good{% elif report.account_health.cancellation_rate_pct <= 5 %}warn{% else %}bad{% endif %}">
+          {{ report.account_health.cancellation_rate_pct | pct }}
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="h-label">Return Rate</div>
+        <div class="h-value {% if report.account_health.return_rate_pct <= 5 %}good{% elif report.account_health.return_rate_pct <= 15 %}warn{% else %}bad{% endif %}">
+          {{ report.account_health.return_rate_pct | pct }}
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="h-label">Dispatch Score</div>
+        <div class="h-value {% if report.account_health.dispatch_score >= 80 %}good{% elif report.account_health.dispatch_score >= 60 %}warn{% else %}bad{% endif %}">
+          {{ report.account_health.dispatch_score }}
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="h-label">Quality Score</div>
+        <div class="h-value {% if report.account_health.quality_score >= 80 %}good{% elif report.account_health.quality_score >= 60 %}warn{% else %}bad{% endif %}">
+          {{ report.account_health.quality_score }}
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="h-label">Active Penalties</div>
+        <div class="h-value {% if report.account_health.penalty_amount == 0 %}good{% else %}bad{% endif %}">
+          {{ report.account_health.penalty_amount | inr }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOP PERFORMING ── -->
+  {% if report.top_performing_products %}
+  <div class="section">
+    <div class="section-title">🏆 Top Performing Products</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Units (30d)</th>
+          <th>Revenue (30d)</th>
+          <th>Rating</th>
+          <th>Return %</th>
+          <th>Conv %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in report.top_performing_products %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ p.product_name }}</div>
+            <div style="font-size:11px;color:var(--muted);">{{ p.product_id }}</div>
+          </td>
+          <td>{{ p.price | inr }}</td>
+          <td><strong>{{ p.units_sold_30d }}</strong></td>
+          <td style="font-weight:600;color:var(--green);">{{ p.revenue_30d | inr }}</td>
+          <td>{{ p.rating }}</td>
+          <td><span class="badge {% if p.return_rate_pct <= 5 %}badge-green{% elif p.return_rate_pct <= 15 %}badge-amber{% else %}badge-red{% endif %}">{{ p.return_rate_pct | pct }}</span></td>
+          <td>{{ p.conversion_rate_pct | pct }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- ── WORST PERFORMING ── -->
+  {% if report.worst_performing_products %}
+  <div class="section">
+    <div class="section-title">⚠️ Worst Performing Products</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Units (30d)</th>
+          <th>Revenue (30d)</th>
+          <th>Rating</th>
+          <th>Return %</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in report.worst_performing_products %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ p.product_name }}</div>
+            <div style="font-size:11px;color:var(--muted);">{{ p.product_id }}</div>
+          </td>
+          <td>{{ p.price | inr }}</td>
+          <td style="color:var(--red);">{{ p.units_sold_30d }}</td>
+          <td style="color:var(--red);">{{ p.revenue_30d | inr }}</td>
+          <td>{{ p.rating }}</td>
+          <td><span class="badge {% if p.return_rate_pct <= 10 %}badge-amber{% else %}badge-red{% endif %}">{{ p.return_rate_pct | pct }}</span></td>
+          <td><span class="badge {% if p.is_active %}badge-blue{% else %}badge-red{% endif %}">{{ 'Active' if p.is_active else 'Inactive' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- ── PRICING RECOMMENDATIONS ── -->
+  {% if report.pricing_recommendations %}
+  <div class="section">
+    <div class="section-title">💰 Pricing Recommendations</div>
+    <div class="insight-grid">
+      {% for rec in report.pricing_recommendations %}
+      <div class="insight-card">
+        <div class="i-title">{{ rec.product_name }}</div>
+        <div class="i-body">{{ rec.reasoning }}</div>
+        <div class="i-meta">
+          <span class="badge badge-red">Current: {{ rec.current_price | inr }}</span>
+          <span class="badge badge-green">Suggested: {{ rec.recommended_price | inr }}</span>
+          <span class="badge {% if rec.priority == 'high' %}badge-red{% elif rec.priority == 'medium' %}badge-amber{% else %}badge-blue{% endif %}">{{ rec.priority | upper }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── PRODUCTS TO REMOVE ── -->
+  {% if report.products_to_remove %}
+  <div class="section">
+    <div class="section-title">🗑️ Products to Review / Remove</div>
+    <div class="insight-grid">
+      {% for alert in report.products_to_remove %}
+      <div class="insight-card remove">
+        <div class="i-title">{{ alert.product_name }}</div>
+        <div class="i-body">{{ alert.reason }}</div>
+        <div class="i-meta">
+          <span class="badge {% if alert.alert_type == 'remove' %}badge-red{% else %}badge-amber{% endif %}">{{ alert.alert_type | upper }}</span>
+          <span class="badge {% if alert.urgency == 'high' %}badge-red{% elif alert.urgency == 'medium' %}badge-amber{% else %}badge-blue{% endif %}">{{ alert.urgency | upper }} URGENCY</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── BUSINESS STRATEGIES ── -->
+  {% if report.business_strategies %}
+  <div class="section">
+    <div class="section-title">🚀 Business Strategies</div>
+    <div class="insight-grid">
+      {% for strategy in report.business_strategies %}
+      <div class="insight-card strategy">
+        <div class="i-title">{{ strategy.title }}</div>
+        <div class="i-body">{{ strategy.description }}</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--meesho-purple);font-weight:600;">
+          📈 {{ strategy.expected_impact }}
+        </div>
+        <div class="i-meta">
+          <span class="badge badge-blue">{{ strategy.effort | upper }} EFFORT</span>
+          <span class="badge badge-green">{{ strategy.timeframe | replace('_', ' ') | upper }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── ACTION ITEMS ── -->
+  {% if report.action_items %}
+  <div class="section">
+    <div class="section-title">✅ Today's Action Items</div>
+    <ul class="action-list">
+      {% for item in report.action_items %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+</div>
+
+<div class="footer">
+  Generated by <strong>Meesho Agent</strong> &nbsp;·&nbsp; Powered by AI &nbsp;·&nbsp; {{ generated_at }}
+  <br>This report is auto-generated. Please verify key decisions against live portal data.
+</div>
+
+</body>
+</html>
